@@ -1,0 +1,32 @@
+# General
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+.history/
+
+# Node
+node_modules/
+*.log
+
+# Builds
+/dist/
+/build/
+/out/
+
+# Env
+.env
+*.user
+
+# .NET
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.swp
+*.sln.docstates
+
+# Coverage
+coverage/
+TestResult*/

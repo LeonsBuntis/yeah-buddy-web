@@ -1,0 +1,6 @@
+@Yeabuddy.Api_HostAddress = http://localhost:5216
+
+GET {{Yeabuddy.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
