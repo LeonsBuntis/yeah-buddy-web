@@ -274,18 +274,20 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white/80 backdrop-blur sticky top-0 z-10 border-b">
-        <div className="mx-auto max-w-3xl px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-base-200">
+      <header className="navbar bg-base-100 shadow-lg sticky top-0 z-10">
+        <div className="navbar-start">
           <div>
             <h1 className="text-xl font-bold">Yeabuddy</h1>
-            <p className="text-xs text-gray-500">Gym workout tracker</p>
+            <p className="text-xs text-base-content/60">Gym workout tracker</p>
           </div>
+        </div>
+        <div className="navbar-end">
           <div className="flex items-center gap-2">
             {isStarted ? (
               <>
-                <button onClick={finishWorkout} className="rounded bg-emerald-600 text-white px-3 py-1.5 text-sm font-medium hover:bg-emerald-500">Finish</button>
-                <button onClick={cancelWorkout} className="rounded bg-red-50 text-red-600 px-3 py-1.5 text-sm font-medium hover:bg-red-100">Cancel</button>
+                <button onClick={finishWorkout} className="btn btn-success btn-sm">Finish</button>
+                <button onClick={cancelWorkout} className="btn btn-error btn-sm">Cancel</button>
               </>
             ) : null}
           </div>
@@ -295,54 +297,57 @@ function App() {
       <main className="mx-auto max-w-3xl px-4 py-6 space-y-6">
         {/* Start panel */}
         {!isStarted && (
-          <section className="bg-white rounded-lg shadow p-4">
-            <h2 className="font-semibold mb-2">Start a workout</h2>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Workout name (optional)" className="border rounded px-3 py-2 w-full" />
-              <button onClick={startWorkout} className="rounded bg-indigo-600 text-white px-4 py-2 font-medium hover:bg-indigo-500 w-full sm:w-auto">Start Workout</button>
+          <section className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              <h2 className="card-title">Start a workout</h2>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <input 
+                  value={name} 
+                  onChange={(e) => setName(e.target.value)} 
+                  placeholder="Workout name (optional)" 
+                  className="input input-bordered w-full" 
+                />
+                <button onClick={startWorkout} className="btn btn-primary w-full sm:w-auto">Start Workout</button>
+              </div>
+              <p className="text-xs text-base-content/60 mt-2">You can add exercises after starting.</p>
             </div>
-            <p className="text-xs text-gray-500 mt-2">You can add exercises after starting.</p>
           </section>
         )}
 
         {/* Build workout panel */}
         {isStarted && (
-          <section className="bg-white rounded-lg shadow p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="font-semibold">{name || 'Workout in progress'}</h2>
-                <p className="text-xs text-gray-500">Add sets, then add the exercise to this workout.</p>
-              </div>
-              {/* Rest Timer Display */}
-              {restTimerSeconds !== null && (
-                <div className="flex items-center gap-2">
-                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    restTimerSeconds <= 10 ? 'bg-red-100 text-red-700' : 
-                    restTimerSeconds <= 30 ? 'bg-yellow-100 text-yellow-700' : 
-                    'bg-blue-100 text-blue-700'
-                  }`}>
-                    Rest: {formatRestTime(restTimerSeconds)}
-                  </div>
-                  <button 
-                    onClick={pauseRestTimer}
-                    className="text-xs text-gray-500 hover:text-gray-700"
-                  >
-                    ⏸️
-                  </button>
+          <section className="card bg-base-100 shadow-xl">
+            <div className="card-body space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="card-title">{name || 'Workout in progress'}</h2>
+                  <p className="text-xs text-base-content/60">Add sets, then add the exercise to this workout.</p>
                 </div>
-              )}
-            </div>
+                {/* Rest Timer Display */}
+                {restTimerSeconds !== null && (
+                  <div className="flex items-center gap-2">
+                    <div className={`badge badge-lg ${
+                      restTimerSeconds <= 10 ? 'badge-error' : 
+                      restTimerSeconds <= 30 ? 'badge-warning' : 
+                      'badge-info'
+                    }`}>
+                      Rest: {formatRestTime(restTimerSeconds)}
+                    </div>
+                    <button 
+                      onClick={pauseRestTimer}
+                      className="btn btn-circle btn-xs btn-ghost"
+                    >
+                      ⏸️
+                    </button>
+                  </div>
+                )}
+              </div>
 
             {/* Exercise header like screenshot (blue title) */}
             <div className="flex items-center justify-between">
-              <div className="text-blue-700 font-medium">{exerciseName || 'Exercise name'}</div>
+              <div className="text-primary font-medium">{exerciseName || 'Exercise name'}</div>
               {/* placeholder for actions/icons */}
             </div>
-
-            {/* Optional tip strip (placeholder, hidden when no tip) */}
-            {/* <div className="bg-yellow-50 text-yellow-900 text-sm rounded px-3 py-2 flex items-center gap-2">
-              <span>Watch back rounding</span>
-            </div> */}
 
             {/* Exercise name and modality selector */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -350,12 +355,12 @@ function App() {
                 value={exerciseName}
                 onChange={(e) => setExerciseName(e.target.value)}
                 placeholder="Exercise (e.g., Deadlift)"
-                className="border rounded px-3 py-2"
+                className="input input-bordered"
               />
               <select
                 value={exerciseModality}
                 onChange={(e) => setExerciseModality(Number(e.target.value) as ExerciseModalityType)}
-                className="border rounded px-3 py-2"
+                className="select select-bordered"
               >
                 <option value={ExerciseModality.WeightReps}>Weight × Reps</option>
                 <option value={ExerciseModality.Time}>Time-based</option>
@@ -377,7 +382,7 @@ function App() {
                     value={repsInput}
                     onChange={(e) => setRepsInput(e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="Reps"
-                    className="border rounded px-3 py-2"
+                    className="input input-bordered"
                   />
                   <input
                     type="number"
@@ -385,7 +390,7 @@ function App() {
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="Weight (kg)"
-                    className="border rounded px-3 py-2"
+                    className="input input-bordered"
                   />
                   <input
                     type="number"
@@ -394,26 +399,26 @@ function App() {
                     value={rpeInput}
                     onChange={(e) => setRpeInput(e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="RPE (1-10)"
-                    className="border rounded px-3 py-2"
+                    className="input input-bordered"
                   />
                   <div className="flex items-center space-x-4">
-                    <label className="flex items-center space-x-2 text-sm">
+                    <label className="label cursor-pointer space-x-2">
                       <input
                         type="checkbox"
                         checked={isWarmupInput}
                         onChange={(e) => setIsWarmupInput(e.target.checked)}
-                        className="rounded"
+                        className="checkbox checkbox-sm"
                       />
-                      <span>Warm-up</span>
+                      <span className="label-text text-sm">Warm-up</span>
                     </label>
-                    <label className="flex items-center space-x-2 text-sm">
+                    <label className="label cursor-pointer space-x-2">
                       <input
                         type="checkbox"
                         checked={isDropsetInput}
                         onChange={(e) => setIsDropsetInput(e.target.checked)}
-                        className="rounded"
+                        className="checkbox checkbox-sm"
                       />
-                      <span>Drop set</span>
+                      <span className="label-text text-sm">Drop set</span>
                     </label>
                   </div>
                 </div>
@@ -427,7 +432,7 @@ function App() {
                     value={durationInput}
                     onChange={(e) => setDurationInput(e.target.value)}
                     placeholder="Duration (mm:ss)"
-                    className="border rounded px-3 py-2"
+                    className="input input-bordered"
                   />
                   <input
                     type="number"
@@ -435,7 +440,7 @@ function App() {
                     value={distanceInput}
                     onChange={(e) => setDistanceInput(e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="Distance (km, optional)"
-                    className="border rounded px-3 py-2"
+                    className="input input-bordered"
                   />
                   <input
                     type="number"
@@ -444,7 +449,7 @@ function App() {
                     value={rpeInput}
                     onChange={(e) => setRpeInput(e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="RPE (1-10)"
-                    className="border rounded px-3 py-2"
+                    className="input input-bordered"
                   />
                 </div>
               )}
@@ -458,14 +463,14 @@ function App() {
                     value={distanceInput}
                     onChange={(e) => setDistanceInput(e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="Distance (km)"
-                    className="border rounded px-3 py-2"
+                    className="input input-bordered"
                   />
                   <input
                     type="text"
                     value={durationInput}
                     onChange={(e) => setDurationInput(e.target.value)}
                     placeholder="Time (mm:ss, optional)"
-                    className="border rounded px-3 py-2"
+                    className="input input-bordered"
                   />
                   <input
                     type="number"
@@ -474,7 +479,7 @@ function App() {
                     value={rpeInput}
                     onChange={(e) => setRpeInput(e.target.value === '' ? '' : Number(e.target.value))}
                     placeholder="RPE (1-10)"
-                    className="border rounded px-3 py-2"
+                    className="input input-bordered"
                   />
                 </div>
               )}
@@ -485,20 +490,20 @@ function App() {
                 value={notesInput}
                 onChange={(e) => setNotesInput(e.target.value)}
                 placeholder="Notes (optional)"
-                className="border rounded px-3 py-2 w-full"
+                className="input input-bordered w-full"
               />
             </div>
 
             {/* Action buttons */}
             <div className="flex flex-wrap items-center gap-2">
-              <button onClick={addSet} className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50">+ Add Set</button>
+              <button onClick={addSet} className="btn btn-outline">+ Add Set</button>
               {currentSets.length > 0 && (
                 <>
-                  <button onClick={copyPreviousSet} className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50 text-blue-600">Copy Previous</button>
+                  <button onClick={copyPreviousSet} className="btn btn-outline btn-primary">Copy Previous</button>
                   {exerciseModality === ExerciseModality.WeightReps && (
                     <>
-                      <button onClick={() => incrementWeight(2.5)} className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50">+2.5kg</button>
-                      <button onClick={() => incrementWeight(5)} className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50">+5kg</button>
+                      <button onClick={() => incrementWeight(2.5)} className="btn btn-outline btn-sm">+2.5kg</button>
+                      <button onClick={() => incrementWeight(5)} className="btn btn-outline btn-sm">+5kg</button>
                     </>
                   )}
                 </>
@@ -506,11 +511,11 @@ function App() {
               
               {/* Rest timer controls */}
               <div className="flex items-center gap-1 ml-auto">
-                <label className="text-xs text-gray-600">Rest:</label>
+                <label className="text-xs text-base-content/60">Rest:</label>
                 <select 
                   value={defaultRestTime} 
                   onChange={(e) => setDefaultRestTime(Number(e.target.value))}
-                  className="border rounded px-2 py-1 text-xs"
+                  className="select select-bordered select-xs"
                 >
                   <option value={60}>1:00</option>
                   <option value={90}>1:30</option>
@@ -521,7 +526,7 @@ function App() {
                 {restTimerSeconds === null && (
                   <button 
                     onClick={() => startRestTimer()} 
-                    className="rounded border px-2 py-1 text-xs hover:bg-gray-50"
+                    className="btn btn-outline btn-xs"
                   >
                     Start Timer
                   </button>
@@ -530,99 +535,103 @@ function App() {
             </div>
 
             {/* Sets table with workout caption */}
-            <div className="overflow-hidden rounded border">
-              <table className="w-full text-sm">
-                <caption className="text-left px-3 py-2 font-semibold text-gray-700">{name || 'Workout'}</caption>
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left px-3 py-2 w-16">Set</th>
-                    <th className="text-left px-3 py-2">Previous</th>
-                    {(exerciseModality === ExerciseModality.WeightReps || 
-                      exerciseModality === ExerciseModality.Bodyweight || 
-                      exerciseModality === ExerciseModality.Assisted) && (
-                      <>
-                        <th className="text-left px-3 py-2">kg</th>
-                        <th className="text-left px-3 py-2">Reps</th>
-                      </>
-                    )}
-                    {exerciseModality === ExerciseModality.Time && (
-                      <>
-                        <th className="text-left px-3 py-2">Duration</th>
-                        <th className="text-left px-3 py-2">Distance</th>
-                      </>
-                    )}
-                    {exerciseModality === ExerciseModality.Distance && (
-                      <>
-                        <th className="text-left px-3 py-2">Distance</th>
-                        <th className="text-left px-3 py-2">Time</th>
-                      </>
-                    )}
-                    <th className="text-left px-3 py-2">RPE</th>
-                    <th className="text-left px-3 py-2">Notes</th>
-                    <th className="px-3 py-2 w-16 text-right">Done</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentSets.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="px-3 py-4 text-center text-gray-500">No sets yet — add your first set above.</td>
-                    </tr>
-                  ) : (
-                    currentSets.map((s, i) => (
-                      <tr key={i} className={`border-t ${s.isWarmup ? 'bg-orange-50' : ''} ${s.isDropset ? 'bg-purple-50' : ''}`}>
-                        <td className="px-3 py-2 text-gray-500">
-                          {i + 1}
-                          {s.isWarmup && <span className="ml-1 text-orange-600 text-xs">W</span>}
-                          {s.isDropset && <span className="ml-1 text-purple-600 text-xs">D</span>}
-                        </td>
-                        <td className="px-3 py-2 text-gray-400">—</td>
+            <div className="card bg-base-100 border">
+              <div className="card-body p-0">
+                <div className="overflow-x-auto">
+                  <table className="table table-zebra">
+                    <caption className="text-left px-4 py-3 font-semibold">{name || 'Workout'}</caption>
+                    <thead>
+                      <tr>
+                        <th className="w-16">Set</th>
+                        <th>Previous</th>
                         {(exerciseModality === ExerciseModality.WeightReps || 
                           exerciseModality === ExerciseModality.Bodyweight || 
                           exerciseModality === ExerciseModality.Assisted) && (
                           <>
-                            <td className="px-3 py-2">{s.weight ?? '—'}</td>
-                            <td className="px-3 py-2">{s.reps}</td>
+                            <th>kg</th>
+                            <th>Reps</th>
                           </>
                         )}
                         {exerciseModality === ExerciseModality.Time && (
                           <>
-                            <td className="px-3 py-2">{s.durationMs ? formatDuration(s.durationMs) : '—'}</td>
-                            <td className="px-3 py-2">{s.distanceM ? `${s.distanceM}km` : '—'}</td>
+                            <th>Duration</th>
+                            <th>Distance</th>
                           </>
                         )}
                         {exerciseModality === ExerciseModality.Distance && (
                           <>
-                            <td className="px-3 py-2">{s.distanceM ? `${s.distanceM}km` : '—'}</td>
-                            <td className="px-3 py-2">{s.durationMs ? formatDuration(s.durationMs) : '—'}</td>
+                            <th>Distance</th>
+                            <th>Time</th>
                           </>
                         )}
-                        <td className="px-3 py-2">{s.rpe ?? '—'}</td>
-                        <td className="px-3 py-2 text-xs text-gray-600">{s.notes ? s.notes.substring(0, 20) + (s.notes.length > 20 ? '...' : '') : '—'}</td>
-                        <td className="px-3 py-2 text-right">
-                          <button
-                            onClick={() => toggleSetDone(i)}
-                            className={
-                              'inline-flex h-6 w-6 items-center justify-center rounded-full border ' +
-                              (s.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white text-gray-400 hover:bg-gray-50')
-                            }
-                            aria-label={s.done ? 'Mark as not done' : 'Mark as done'}
-                          >
-                            ✓
-                          </button>
-                          <button onClick={() => removeSet(i)} className="ml-2 text-red-600 hover:underline text-xs">remove</button>
-                        </td>
+                        <th>RPE</th>
+                        <th>Notes</th>
+                        <th className="w-16 text-right">Done</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {currentSets.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="text-center text-base-content/60 py-8">No sets yet — add your first set above.</td>
+                        </tr>
+                      ) : (
+                        currentSets.map((s, i) => (
+                          <tr key={i} className={`${s.isWarmup ? 'bg-warning/10' : ''} ${s.isDropset ? 'bg-secondary/10' : ''}`}>
+                            <td className="text-base-content/60">
+                              {i + 1}
+                              {s.isWarmup && <span className="ml-1 badge badge-warning badge-xs">W</span>}
+                              {s.isDropset && <span className="ml-1 badge badge-secondary badge-xs">D</span>}
+                            </td>
+                            <td className="text-base-content/40">—</td>
+                            {(exerciseModality === ExerciseModality.WeightReps || 
+                              exerciseModality === ExerciseModality.Bodyweight || 
+                              exerciseModality === ExerciseModality.Assisted) && (
+                              <>
+                                <td>{s.weight ?? '—'}</td>
+                                <td>{s.reps}</td>
+                              </>
+                            )}
+                            {exerciseModality === ExerciseModality.Time && (
+                              <>
+                                <td>{s.durationMs ? formatDuration(s.durationMs) : '—'}</td>
+                                <td>{s.distanceM ? `${s.distanceM}km` : '—'}</td>
+                              </>
+                            )}
+                            {exerciseModality === ExerciseModality.Distance && (
+                              <>
+                                <td>{s.distanceM ? `${s.distanceM}km` : '—'}</td>
+                                <td>{s.durationMs ? formatDuration(s.durationMs) : '—'}</td>
+                              </>
+                            )}
+                            <td>{s.rpe ?? '—'}</td>
+                            <td className="text-xs">{s.notes ? s.notes.substring(0, 20) + (s.notes.length > 20 ? '...' : '') : '—'}</td>
+                            <td className="text-right">
+                              <button
+                                onClick={() => toggleSetDone(i)}
+                                className={
+                                  'btn btn-circle btn-xs ' +
+                                  (s.done ? 'btn-success' : 'btn-outline')
+                                }
+                                aria-label={s.done ? 'Mark as not done' : 'Mark as done'}
+                              >
+                                ✓
+                              </button>
+                              <button onClick={() => removeSet(i)} className="btn btn-ghost btn-xs text-error ml-2">remove</button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
             <div>
               <button
                 onClick={addExercise}
                 disabled={!exerciseName.trim() || currentSets.length === 0}
-                className="rounded bg-blue-600 disabled:bg-blue-300 text-white px-4 py-2 font-medium hover:bg-blue-500"
+                className="btn btn-primary"
               >
                 Add Exercise
               </button>
@@ -632,11 +641,11 @@ function App() {
             {exercises.length > 0 && (
               <div className="space-y-3 pt-2">
                 {exercises.map((ex, i) => (
-                  <div key={i} className="bg-white rounded border">
-                    <div className="px-4 py-3 border-b">
+                  <div key={i} className="card bg-base-100 border">
+                    <div className="card-body">
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-blue-700">{ex.name}</span>
-                        <span className="text-xs text-gray-500">
+                        <span className="font-medium text-primary">{ex.name}</span>
+                        <span className="badge badge-outline">
                           {ex.modality === ExerciseModality.WeightReps && 'Weight × Reps'}
                           {ex.modality === ExerciseModality.Time && 'Time-based'}
                           {ex.modality === ExerciseModality.Distance && 'Distance-based'}
@@ -644,52 +653,55 @@ function App() {
                           {ex.modality === ExerciseModality.Assisted && 'Assisted'}
                         </span>
                       </div>
+                      <ul className="text-sm text-base-content/80 mt-2">
+                        {ex.sets.map((s, j) => (
+                          <li key={j} className="py-1">
+                            Set {j + 1}: 
+                            {ex.modality === ExerciseModality.WeightReps && ` ${s.reps} reps${s.weight ? ` @ ${s.weight} kg` : ''}`}
+                            {ex.modality === ExerciseModality.Time && ` ${s.durationMs ? formatDuration(s.durationMs) : '—'}${s.distanceM ? ` (${s.distanceM}km)` : ''}`}
+                            {ex.modality === ExerciseModality.Distance && ` ${s.distanceM ? `${s.distanceM}km` : '—'}${s.durationMs ? ` in ${formatDuration(s.durationMs)}` : ''}`}
+                            {(ex.modality === ExerciseModality.Bodyweight || ex.modality === ExerciseModality.Assisted) && ` ${s.reps} reps${s.weight ? ` @ ${s.weight} kg` : ''}`}
+                            {s.rpe ? ` (RPE ${s.rpe})` : ''}
+                            {s.isWarmup ? ' [Warm-up]' : ''}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <ul className="px-4 py-2 text-sm text-gray-700">
-                      {ex.sets.map((s, j) => (
-                        <li key={j} className="py-1">
-                          Set {j + 1}: 
-                          {ex.modality === ExerciseModality.WeightReps && ` ${s.reps} reps${s.weight ? ` @ ${s.weight} kg` : ''}`}
-                          {ex.modality === ExerciseModality.Time && ` ${s.durationMs ? formatDuration(s.durationMs) : '—'}${s.distanceM ? ` (${s.distanceM}km)` : ''}`}
-                          {ex.modality === ExerciseModality.Distance && ` ${s.distanceM ? `${s.distanceM}km` : '—'}${s.durationMs ? ` in ${formatDuration(s.durationMs)}` : ''}`}
-                          {(ex.modality === ExerciseModality.Bodyweight || ex.modality === ExerciseModality.Assisted) && ` ${s.reps} reps${s.weight ? ` @ ${s.weight} kg` : ''}`}
-                          {s.rpe ? ` (RPE ${s.rpe})` : ''}
-                          {s.isWarmup ? ' [Warm-up]' : ''}
-                        </li>
-                      ))}
-                    </ul>
                   </div>
                 ))}
               </div>
             )}
+            </div>
           </section>
         )}
 
         {/* Recent workouts */}
         <section className="space-y-3">
-          <h2 className="font-semibold">Recent workouts</h2>
+          <h2 className="text-xl font-semibold">Recent workouts</h2>
           {workouts.map((w: WorkoutDto) => (
-            <div key={w.id} className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{w.name || 'Workout'}</h3>
-                <span className="text-xs text-gray-500">{w.date ? new Date(w.date).toLocaleString() : ''}</span>
+            <div key={w.id} className="card bg-base-100 shadow-xl">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <h3 className="card-title">{w.name || 'Workout'}</h3>
+                  <span className="text-xs text-base-content/60">{w.date ? new Date(w.date).toLocaleString() : ''}</span>
+                </div>
+                <ul className="mt-2 list-disc pl-6 text-sm text-base-content/80">
+                  {w.exercises?.map((ex: ExerciseDto, i: number) => (
+                    <li key={i}>
+                      <span className="font-medium">{ex.name}</span> — {ex.sets?.map((s: SetDto) => {
+                        const modality = ex.modality || ExerciseModality.WeightReps
+                        if (modality === ExerciseModality.Time) {
+                          return `${s.durationMs ? formatDuration(s.durationMs) : '—'}${s.distanceM ? ` (${s.distanceM}km)` : ''}`
+                        } else if (modality === ExerciseModality.Distance) {
+                          return `${s.distanceM ? `${s.distanceM}km` : '—'}${s.durationMs ? ` in ${formatDuration(s.durationMs)}` : ''}`
+                        } else {
+                          return `${s.reps} reps${s.weight ? ` @ ${s.weight}kg` : ''}`
+                        }
+                      }).join(', ')}
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <ul className="mt-2 list-disc pl-6 text-sm text-gray-700">
-                {w.exercises?.map((ex: ExerciseDto, i: number) => (
-                  <li key={i}>
-                    <span className="font-medium">{ex.name}</span> — {ex.sets?.map((s: SetDto) => {
-                      const modality = ex.modality || ExerciseModality.WeightReps
-                      if (modality === ExerciseModality.Time) {
-                        return `${s.durationMs ? formatDuration(s.durationMs) : '—'}${s.distanceM ? ` (${s.distanceM}km)` : ''}`
-                      } else if (modality === ExerciseModality.Distance) {
-                        return `${s.distanceM ? `${s.distanceM}km` : '—'}${s.durationMs ? ` in ${formatDuration(s.durationMs)}` : ''}`
-                      } else {
-                        return `${s.reps} reps${s.weight ? ` @ ${s.weight}kg` : ''}`
-                      }
-                    }).join(', ')}
-                  </li>
-                ))}
-              </ul>
             </div>
           ))}
         </section>
