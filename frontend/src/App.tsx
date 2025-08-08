@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { InlineEdit } from './InlineEdit'
 
 // Exercise modality constants to match backend
 const ExerciseModality = {
@@ -257,6 +258,36 @@ function App() {
 
   const toggleSetDone = (idx: number) => {
     setCurrentSets((prev) => prev.map((s, i) => (i === idx ? { ...s, done: !s.done } : s)))
+  }
+
+  const updateSetNumber = (oldIndex: number, newSetNumber: number) => {
+    // Validate that the new set number is unique and within range
+    const maxSetNumber = currentSets.length
+    if (newSetNumber < 1 || newSetNumber > maxSetNumber) {
+      throw new Error(`Set number must be between 1 and ${maxSetNumber}`)
+    }
+
+    const newIndex = newSetNumber - 1
+    if (newIndex === oldIndex) return // No change needed
+
+    // Check if the target position is already occupied by a different set
+    setCurrentSets((prev) => {
+      const newSets = [...prev]
+      const movingSet = newSets[oldIndex]
+      
+      // Remove from old position
+      newSets.splice(oldIndex, 1)
+      // Insert at new position
+      newSets.splice(newIndex, 0, movingSet)
+      
+      return newSets
+    })
+  }
+
+  const updateSetReps = (idx: number, newReps: number) => {
+    setCurrentSets((prev) => 
+      prev.map((s, i) => (i === idx ? { ...s, reps: newReps } : s))
+    )
   }
 
   const finishWorkout = async () => {
@@ -685,9 +716,23 @@ function App() {
                         currentSets.map((s, i) => (
                           <tr key={i} className={`${s.isWarmup ? 'bg-warning/10' : ''} ${s.isDropset ? 'bg-secondary/10' : ''}`}>
                             <td className="text-base-content/60">
-                              {i + 1}
-                              {s.isWarmup && <span className="ml-1 badge badge-warning badge-xs">W</span>}
-                              {s.isDropset && <span className="ml-1 badge badge-secondary badge-xs">D</span>}
+                              <div className="flex items-center gap-1">
+                                <InlineEdit
+                                  value={i + 1}
+                                  onCommit={(newSetNumber) => updateSetNumber(i, newSetNumber)}
+                                  min={1}
+                                  max={currentSets.length}
+                                  validate={(newSetNumber) => {
+                                    const newIndex = newSetNumber - 1
+                                    if (newIndex !== i && currentSets[newIndex]) {
+                                      return `Set ${newSetNumber} position already exists`
+                                    }
+                                    return null
+                                  }}
+                                />
+                                {s.isWarmup && <span className="ml-1 badge badge-warning badge-xs">W</span>}
+                                {s.isDropset && <span className="ml-1 badge badge-secondary badge-xs">D</span>}
+                              </div>
                             </td>
                             <td className="text-base-content/40">—</td>
                             {(exerciseModality === ExerciseModality.WeightReps || 
@@ -695,7 +740,15 @@ function App() {
                               exerciseModality === ExerciseModality.Assisted) && (
                               <>
                                 <td>{s.weight ?? '—'}</td>
-                                <td>{s.reps}</td>
+                                <td>
+                                  <InlineEdit
+                                    value={s.reps}
+                                    onCommit={(newReps) => updateSetReps(i, newReps)}
+                                    min={1}
+                                    max={100}
+                                    placeholder="Reps"
+                                  />
+                                </td>
                               </>
                             )}
                             {exerciseModality === ExerciseModality.Time && (
