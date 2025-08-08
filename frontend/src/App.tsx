@@ -65,6 +65,12 @@ function App() {
   const [rpeInput, setRpeInput] = useState<number | ''>('' as number | '')
   const [notesInput, setNotesInput] = useState('')
   const [isWarmupInput, setIsWarmupInput] = useState(false)
+  const [isDropsetInput, setIsDropsetInput] = useState(false)
+
+  // Rest timer state
+  const [restTimerSeconds, setRestTimerSeconds] = useState<number | null>(null)
+  const [restStartTime, setRestStartTime] = useState<number | null>(null)
+  const [defaultRestTime, setDefaultRestTime] = useState(90) // default 90 seconds
 
   useEffect(() => {
     fetch(`${apiBase}/workouts`)
@@ -72,6 +78,27 @@ function App() {
       .then((data: WorkoutDto[]) => setWorkouts(data))
       .catch(() => {})
   }, [])
+
+  // Rest timer effect
+  useEffect(() => {
+    let interval: number
+    if (restTimerSeconds !== null && restTimerSeconds > 0) {
+      interval = setInterval(() => {
+        setRestTimerSeconds(prev => {
+          if (prev === null || prev <= 1) {
+            // Timer finished
+            if (restStartTime) {
+              // Show notification (simple alert for now)
+              setTimeout(() => alert('Rest time complete!'), 100)
+            }
+            return null
+          }
+          return prev - 1
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [restTimerSeconds, restStartTime])
 
   const startWorkout = () => {
     setIsStarted(true)
@@ -86,6 +113,9 @@ function App() {
     setRpeInput('')
     setNotesInput('')
     setIsWarmupInput(false)
+    setIsDropsetInput(false)
+    setRestTimerSeconds(null)
+    setRestStartTime(null)
   }
 
   const cancelWorkout = () => {
@@ -101,7 +131,10 @@ function App() {
     setRpeInput('')
     setNotesInput('')
     setIsWarmupInput(false)
+    setIsDropsetInput(false)
     setName('')
+    setRestTimerSeconds(null)
+    setRestStartTime(null)
   }
 
   // Helper function to parse duration from mm:ss to milliseconds
@@ -146,10 +179,18 @@ function App() {
       durationMs,
       distanceM: distance || undefined,
       isWarmup: isWarmupInput,
-      notes: notesInput.trim() || undefined
+      isDropset: isDropsetInput,
+      notes: notesInput.trim() || undefined,
+      restSeconds: defaultRestTime
     }
     
     setCurrentSets((prev) => [...prev, set])
+    
+    // Auto-start rest timer if not a warm-up set
+    if (!isWarmupInput && defaultRestTime > 0) {
+      setRestTimerSeconds(defaultRestTime)
+      setRestStartTime(Date.now())
+    }
     
     // Clear inputs but keep modality and exercise name
     setRepsInput('')
@@ -159,6 +200,7 @@ function App() {
     setRpeInput('')
     setNotesInput('')
     setIsWarmupInput(false)
+    setIsDropsetInput(false)
   }
 
   const removeSet = (idx: number) => {
@@ -175,11 +217,28 @@ function App() {
     setRpeInput(lastSet.rpe || '')
     setNotesInput(lastSet.notes || '')
     setIsWarmupInput(lastSet.isWarmup || false)
+    setIsDropsetInput(lastSet.isDropset || false)
   }
 
   const incrementWeight = (amount: number) => {
     const currentWeight = typeof weightInput === 'string' ? parseFloat(weightInput || '0') : weightInput
     setWeightInput((currentWeight || 0) + amount)
+  }
+
+  const startRestTimer = (seconds: number = defaultRestTime) => {
+    setRestTimerSeconds(seconds)
+    setRestStartTime(Date.now())
+  }
+
+  const pauseRestTimer = () => {
+    setRestTimerSeconds(null)
+    setRestStartTime(null)
+  }
+
+  const formatRestTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   const addExercise = () => {
@@ -254,7 +313,24 @@ function App() {
                 <h2 className="font-semibold">{name || 'Workout in progress'}</h2>
                 <p className="text-xs text-gray-500">Add sets, then add the exercise to this workout.</p>
               </div>
-              {/* could place timer / icons here later */}
+              {/* Rest Timer Display */}
+              {restTimerSeconds !== null && (
+                <div className="flex items-center gap-2">
+                  <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    restTimerSeconds <= 10 ? 'bg-red-100 text-red-700' : 
+                    restTimerSeconds <= 30 ? 'bg-yellow-100 text-yellow-700' : 
+                    'bg-blue-100 text-blue-700'
+                  }`}>
+                    Rest: {formatRestTime(restTimerSeconds)}
+                  </div>
+                  <button 
+                    onClick={pauseRestTimer}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    ⏸️
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Exercise header like screenshot (blue title) */}
@@ -320,7 +396,7 @@ function App() {
                     placeholder="RPE (1-10)"
                     className="border rounded px-3 py-2"
                   />
-                  <div className="flex items-center">
+                  <div className="flex items-center space-x-4">
                     <label className="flex items-center space-x-2 text-sm">
                       <input
                         type="checkbox"
@@ -329,6 +405,15 @@ function App() {
                         className="rounded"
                       />
                       <span>Warm-up</span>
+                    </label>
+                    <label className="flex items-center space-x-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={isDropsetInput}
+                        onChange={(e) => setIsDropsetInput(e.target.checked)}
+                        className="rounded"
+                      />
+                      <span>Drop set</span>
                     </label>
                   </div>
                 </div>
@@ -418,6 +503,30 @@ function App() {
                   )}
                 </>
               )}
+              
+              {/* Rest timer controls */}
+              <div className="flex items-center gap-1 ml-auto">
+                <label className="text-xs text-gray-600">Rest:</label>
+                <select 
+                  value={defaultRestTime} 
+                  onChange={(e) => setDefaultRestTime(Number(e.target.value))}
+                  className="border rounded px-2 py-1 text-xs"
+                >
+                  <option value={60}>1:00</option>
+                  <option value={90}>1:30</option>
+                  <option value={120}>2:00</option>
+                  <option value={180}>3:00</option>
+                  <option value={300}>5:00</option>
+                </select>
+                {restTimerSeconds === null && (
+                  <button 
+                    onClick={() => startRestTimer()} 
+                    className="rounded border px-2 py-1 text-xs hover:bg-gray-50"
+                  >
+                    Start Timer
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Sets table with workout caption */}
@@ -460,10 +569,11 @@ function App() {
                     </tr>
                   ) : (
                     currentSets.map((s, i) => (
-                      <tr key={i} className={`border-t ${s.isWarmup ? 'bg-orange-50' : ''}`}>
+                      <tr key={i} className={`border-t ${s.isWarmup ? 'bg-orange-50' : ''} ${s.isDropset ? 'bg-purple-50' : ''}`}>
                         <td className="px-3 py-2 text-gray-500">
                           {i + 1}
                           {s.isWarmup && <span className="ml-1 text-orange-600 text-xs">W</span>}
+                          {s.isDropset && <span className="ml-1 text-purple-600 text-xs">D</span>}
                         </td>
                         <td className="px-3 py-2 text-gray-400">—</td>
                         {(exerciseModality === ExerciseModality.WeightReps || 
