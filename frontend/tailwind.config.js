@@ -2,5 +2,14 @@
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: { extend: {} },
-  plugins: [],
+  plugins: [require('daisyui')],
+  daisyui: {
+    themes: ['nord'],
+    base: true,
+    styled: true,
+    utils: true,
+    prefix: '',
+    logs: true,
+    themeRoot: ':root',
+  },
 }
