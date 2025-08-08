@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { InlineEdit } from './InlineEdit'
 
+// Toast type for notifications
+type Toast = {
+  id: string
+  message: string
+  type: 'success' | 'info' | 'warning' | 'error'
+}
+
 // Exercise modality constants to match backend
 const ExerciseModality = {
   WeightReps: 1,
@@ -47,6 +54,9 @@ type WorkoutDto = {
 const apiBase = 'http://localhost:5216/api'
 
 function App() {
+  // Toast notifications state
+  const [toasts, setToasts] = useState<Toast[]>([])
+
   // Recent workouts fetched from API
   const [workouts, setWorkouts] = useState<WorkoutDto[]>([])
 
@@ -73,6 +83,22 @@ function App() {
   const [restStartTime, setRestStartTime] = useState<number | null>(null)
   const [defaultRestTime, setDefaultRestTime] = useState(90) // default 90 seconds
 
+  // Toast management functions
+  const addToast = (message: string, type: 'success' | 'info' | 'warning' | 'error' = 'info') => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const newToast = { id, message, type }
+    setToasts(prev => [...prev, newToast])
+    
+    // Auto-remove toast after 4 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(toast => toast.id !== id))
+    }, 4000)
+  }
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id))
+  }
+
   useEffect(() => {
     fetch(`${apiBase}/workouts`)
       .then((r) => r.json())
@@ -89,8 +115,8 @@ function App() {
           if (prev === null || prev <= 1) {
             // Timer finished
             if (restStartTime) {
-              // Show notification (simple alert for now)
-              setTimeout(() => alert('Rest time complete!'), 100)
+              // Show toast notification
+              addToast('Rest time complete!', 'success')
             }
             return null
           }
@@ -877,6 +903,30 @@ function App() {
           ))}
         </section>
       </main>
+
+      {/* Toast notifications */}
+      <div className="toast toast-top toast-end">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`alert ${
+              toast.type === 'success' ? 'alert-success' :
+              toast.type === 'error' ? 'alert-error' :
+              toast.type === 'warning' ? 'alert-warning' :
+              'alert-info'
+            }`}
+          >
+            <span>{toast.message}</span>
+            <button 
+              onClick={() => removeToast(toast.id)}
+              className="btn btn-ghost btn-xs"
+              aria-label="Close notification"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
