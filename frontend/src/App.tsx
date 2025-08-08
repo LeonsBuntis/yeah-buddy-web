@@ -401,8 +401,8 @@ function App() {
                     placeholder="RPE (1-10)"
                     className="input input-bordered"
                   />
-                  <div className="flex items-center space-x-4">
-                    <label className="label cursor-pointer space-x-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="label cursor-pointer gap-1 p-0">
                       <input
                         type="checkbox"
                         checked={isWarmupInput}
@@ -411,7 +411,7 @@ function App() {
                       />
                       <span className="label-text text-sm">Warm-up</span>
                     </label>
-                    <label className="label cursor-pointer space-x-2">
+                    <label className="label cursor-pointer gap-1 p-0">
                       <input
                         type="checkbox"
                         checked={isDropsetInput}
