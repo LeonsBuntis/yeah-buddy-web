@@ -62,10 +62,10 @@ function App() {
   const [weightInput, setWeightInput] = useState<number | ''>('' as number | '')
   const [durationInput, setDurationInput] = useState<string>('') // mm:ss format
   const [distanceInput, setDistanceInput] = useState<number | ''>('' as number | '')
-  const [rpeInput, setRpeInput] = useState<number | ''>('' as number | '')
   const [notesInput, setNotesInput] = useState('')
   const [isWarmupInput, setIsWarmupInput] = useState(false)
   const [isDropsetInput, setIsDropsetInput] = useState(false)
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
 
   // Rest timer state
   const [restTimerSeconds, setRestTimerSeconds] = useState<number | null>(null)
@@ -110,10 +110,10 @@ function App() {
     setWeightInput('')
     setDurationInput('')
     setDistanceInput('')
-    setRpeInput('')
     setNotesInput('')
     setIsWarmupInput(false)
     setIsDropsetInput(false)
+    setShowAdvancedOptions(false)
     setRestTimerSeconds(null)
     setRestStartTime(null)
   }
@@ -128,10 +128,10 @@ function App() {
     setWeightInput('')
     setDurationInput('')
     setDistanceInput('')
-    setRpeInput('')
     setNotesInput('')
     setIsWarmupInput(false)
     setIsDropsetInput(false)
+    setShowAdvancedOptions(false)
     setName('')
     setRestTimerSeconds(null)
     setRestStartTime(null)
@@ -163,7 +163,6 @@ function App() {
     const reps = typeof repsInput === 'string' ? parseInt(repsInput || '0', 10) : repsInput
     const weight = typeof weightInput === 'string' ? parseFloat(weightInput || '0') : weightInput
     const distance = typeof distanceInput === 'string' ? parseFloat(distanceInput || '0') : distanceInput
-    const rpe = typeof rpeInput === 'string' ? parseInt(rpeInput || '0', 10) : rpeInput
     const durationMs = parseDuration(durationInput)
     
     // Validation based on modality
@@ -175,7 +174,6 @@ function App() {
     const set: SetDto = {
       reps: reps || 0,
       weight: weight || undefined,
-      rpe: rpe || undefined,
       durationMs,
       distanceM: distance || undefined,
       isWarmup: isWarmupInput,
@@ -197,7 +195,6 @@ function App() {
     setWeightInput('')
     setDurationInput('')
     setDistanceInput('')
-    setRpeInput('')
     setNotesInput('')
     setIsWarmupInput(false)
     setIsDropsetInput(false)
@@ -214,10 +211,14 @@ function App() {
     setWeightInput(lastSet.weight || '')
     setDurationInput(lastSet.durationMs ? formatDuration(lastSet.durationMs) : '')
     setDistanceInput(lastSet.distanceM || '')
-    setRpeInput(lastSet.rpe || '')
     setNotesInput(lastSet.notes || '')
     setIsWarmupInput(lastSet.isWarmup || false)
     setIsDropsetInput(lastSet.isDropset || false)
+    
+    // Show advanced options if any advanced features are being copied
+    if (lastSet.isWarmup || lastSet.isDropset) {
+      setShowAdvancedOptions(true)
+    }
   }
 
   const incrementWeight = (amount: number) => {
@@ -350,172 +351,257 @@ function App() {
             </div>
 
             {/* Exercise name and modality selector */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input
-                value={exerciseName}
-                onChange={(e) => setExerciseName(e.target.value)}
-                placeholder="Exercise (e.g., Deadlift)"
-                className="input input-bordered"
-              />
-              <select
-                value={exerciseModality}
-                onChange={(e) => setExerciseModality(Number(e.target.value) as ExerciseModalityType)}
-                className="select select-bordered"
-              >
-                <option value={ExerciseModality.WeightReps}>Weight × Reps</option>
-                <option value={ExerciseModality.Time}>Time-based</option>
-                <option value={ExerciseModality.Distance}>Distance-based</option>
-                <option value={ExerciseModality.Bodyweight}>Bodyweight</option>
-                <option value={ExerciseModality.Assisted}>Assisted</option>
-              </select>
+            <div className="exercise-form-grid">
+              <div>
+                <label htmlFor="exercise-name" className="label">
+                  <span className="label-text">Exercise name</span>
+                </label>
+                <input
+                  id="exercise-name"
+                  value={exerciseName}
+                  onChange={(e) => setExerciseName(e.target.value)}
+                  placeholder="Exercise (e.g., Deadlift)"
+                  className="input input-bordered w-full touch-target"
+                />
+              </div>
+              <div>
+                <label htmlFor="exercise-modality" className="label">
+                  <span className="label-text">Type</span>
+                </label>
+                <select
+                  id="exercise-modality"
+                  value={exerciseModality}
+                  onChange={(e) => setExerciseModality(Number(e.target.value) as ExerciseModalityType)}
+                  className="select select-bordered w-full touch-target"
+                >
+                  <option value={ExerciseModality.WeightReps}>Weight × Reps</option>
+                  <option value={ExerciseModality.Time}>Time-based</option>
+                  <option value={ExerciseModality.Distance}>Distance-based</option>
+                  <option value={ExerciseModality.Bodyweight}>Bodyweight</option>
+                  <option value={ExerciseModality.Assisted}>Assisted</option>
+                </select>
+              </div>
             </div>
 
             {/* Set inputs based on modality */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {/* Weight and Reps - shown for most modalities */}
               {(exerciseModality === ExerciseModality.WeightReps || 
                 exerciseModality === ExerciseModality.Bodyweight || 
                 exerciseModality === ExerciseModality.Assisted) && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <input
-                    type="number"
-                    value={repsInput}
-                    onChange={(e) => setRepsInput(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="Reps"
-                    className="input input-bordered"
-                  />
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={weightInput}
-                    onChange={(e) => setWeightInput(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="Weight (kg)"
-                    className="input input-bordered"
-                  />
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={rpeInput}
-                    onChange={(e) => setRpeInput(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="RPE (1-10)"
-                    className="input input-bordered"
-                  />
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <label className="label cursor-pointer gap-1 p-0">
-                      <input
-                        type="checkbox"
-                        checked={isWarmupInput}
-                        onChange={(e) => setIsWarmupInput(e.target.checked)}
-                        className="checkbox checkbox-sm"
-                      />
-                      <span className="label-text text-sm">Warm-up</span>
+                <div className="exercise-form-grid--compact">
+                  <div>
+                    <label htmlFor="reps-input" className="label">
+                      <span className="label-text">Reps</span>
                     </label>
-                    <label className="label cursor-pointer gap-1 p-0">
-                      <input
-                        type="checkbox"
-                        checked={isDropsetInput}
-                        onChange={(e) => setIsDropsetInput(e.target.checked)}
-                        className="checkbox checkbox-sm"
-                      />
-                      <span className="label-text text-sm">Drop set</span>
+                    <input
+                      id="reps-input"
+                      type="number"
+                      value={repsInput}
+                      onChange={(e) => setRepsInput(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="Reps"
+                      className="input input-bordered w-full touch-target"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="weight-input" className="label">
+                      <span className="label-text">Weight (kg)</span>
                     </label>
+                    <input
+                      id="weight-input"
+                      type="number"
+                      step="0.5"
+                      value={weightInput}
+                      onChange={(e) => setWeightInput(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="Weight"
+                      className="input input-bordered w-full touch-target"
+                      min="0"
+                    />
                   </div>
                 </div>
               )}
 
               {/* Time-based inputs */}
               {exerciseModality === ExerciseModality.Time && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <input
-                    type="text"
-                    value={durationInput}
-                    onChange={(e) => setDurationInput(e.target.value)}
-                    placeholder="Duration (mm:ss)"
-                    className="input input-bordered"
-                  />
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={distanceInput}
-                    onChange={(e) => setDistanceInput(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="Distance (km, optional)"
-                    className="input input-bordered"
-                  />
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={rpeInput}
-                    onChange={(e) => setRpeInput(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="RPE (1-10)"
-                    className="input input-bordered"
-                  />
+                <div className="exercise-form-grid--compact">
+                  <div>
+                    <label htmlFor="duration-input" className="label">
+                      <span className="label-text">Duration</span>
+                    </label>
+                    <input
+                      id="duration-input"
+                      type="text"
+                      value={durationInput}
+                      onChange={(e) => setDurationInput(e.target.value)}
+                      placeholder="mm:ss"
+                      className="input input-bordered w-full touch-target"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="distance-time-input" className="label">
+                      <span className="label-text">Distance (km, optional)</span>
+                    </label>
+                    <input
+                      id="distance-time-input"
+                      type="number"
+                      step="0.1"
+                      value={distanceInput}
+                      onChange={(e) => setDistanceInput(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="Distance"
+                      className="input input-bordered w-full touch-target"
+                      min="0"
+                    />
+                  </div>
                 </div>
               )}
 
               {/* Distance-based inputs */}
               {exerciseModality === ExerciseModality.Distance && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={distanceInput}
-                    onChange={(e) => setDistanceInput(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="Distance (km)"
-                    className="input input-bordered"
-                  />
-                  <input
-                    type="text"
-                    value={durationInput}
-                    onChange={(e) => setDurationInput(e.target.value)}
-                    placeholder="Time (mm:ss, optional)"
-                    className="input input-bordered"
-                  />
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={rpeInput}
-                    onChange={(e) => setRpeInput(e.target.value === '' ? '' : Number(e.target.value))}
-                    placeholder="RPE (1-10)"
-                    className="input input-bordered"
-                  />
+                <div className="exercise-form-grid--compact">
+                  <div>
+                    <label htmlFor="distance-distance-input" className="label">
+                      <span className="label-text">Distance (km)</span>
+                    </label>
+                    <input
+                      id="distance-distance-input"
+                      type="number"
+                      step="0.1"
+                      value={distanceInput}
+                      onChange={(e) => setDistanceInput(e.target.value === '' ? '' : Number(e.target.value))}
+                      placeholder="Distance"
+                      className="input input-bordered w-full touch-target"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="time-distance-input" className="label">
+                      <span className="label-text">Time (mm:ss, optional)</span>
+                    </label>
+                    <input
+                      id="time-distance-input"
+                      type="text"
+                      value={durationInput}
+                      onChange={(e) => setDurationInput(e.target.value)}
+                      placeholder="mm:ss"
+                      className="input input-bordered w-full touch-target"
+                    />
+                  </div>
                 </div>
               )}
 
               {/* Notes input for all modalities */}
-              <input
-                type="text"
-                value={notesInput}
-                onChange={(e) => setNotesInput(e.target.value)}
-                placeholder="Notes (optional)"
-                className="input input-bordered w-full"
-              />
+              <div>
+                <label htmlFor="notes-input" className="label">
+                  <span className="label-text">Notes (optional)</span>
+                </label>
+                <input
+                  id="notes-input"
+                  type="text"
+                  value={notesInput}
+                  onChange={(e) => setNotesInput(e.target.value)}
+                  placeholder="Add notes about this set..."
+                  className="input input-bordered w-full touch-target"
+                />
+              </div>
+
+              {/* Advanced Options */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                  className="advanced-toggle touch-target"
+                  aria-expanded={showAdvancedOptions}
+                >
+                  <span>{showAdvancedOptions ? '▼' : '▶'}</span>
+                  Advanced options
+                  {(isWarmupInput || isDropsetInput) && (
+                    <div className="flex gap-1 ml-2">
+                      {isWarmupInput && <span className="badge badge-warning badge-xs">Warm-up</span>}
+                      {isDropsetInput && <span className="badge badge-secondary badge-xs">Drop set</span>}
+                    </div>
+                  )}
+                </button>
+                
+                {showAdvancedOptions && (
+                  <div className="advanced-options mt-2">
+                    <div className="flex flex-wrap gap-4">
+                      <label className="label cursor-pointer gap-2 p-0 touch-target">
+                        <input
+                          type="checkbox"
+                          checked={isWarmupInput}
+                          onChange={(e) => setIsWarmupInput(e.target.checked)}
+                          className="checkbox checkbox-sm"
+                        />
+                        <span className="label-text">Warm-up set</span>
+                      </label>
+                      <label className="label cursor-pointer gap-2 p-0 touch-target">
+                        <input
+                          type="checkbox"
+                          checked={isDropsetInput}
+                          onChange={(e) => setIsDropsetInput(e.target.checked)}
+                          className="checkbox checkbox-sm"
+                        />
+                        <span className="label-text">Drop set</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Action buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              <button onClick={addSet} className="btn btn-outline">+ Add Set</button>
-              {currentSets.length > 0 && (
-                <>
-                  <button onClick={copyPreviousSet} className="btn btn-outline btn-primary">Copy Previous</button>
-                  {exerciseModality === ExerciseModality.WeightReps && (
-                    <>
-                      <button onClick={() => incrementWeight(2.5)} className="btn btn-outline btn-sm">+2.5kg</button>
-                      <button onClick={() => incrementWeight(5)} className="btn btn-outline btn-sm">+5kg</button>
-                    </>
-                  )}
-                </>
-              )}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                <button 
+                  onClick={addSet} 
+                  className="btn btn-primary touch-target"
+                  aria-label="Add set to current exercise"
+                >
+                  + Add Set
+                </button>
+                {currentSets.length > 0 && (
+                  <>
+                    <button 
+                      onClick={copyPreviousSet} 
+                      className="btn btn-outline touch-target"
+                      aria-label="Copy values from previous set"
+                    >
+                      Copy Previous
+                    </button>
+                    {exerciseModality === ExerciseModality.WeightReps && (
+                      <>
+                        <button 
+                          onClick={() => incrementWeight(2.5)} 
+                          className="btn btn-outline btn-sm touch-target"
+                          aria-label="Increase weight by 2.5kg"
+                        >
+                          +2.5kg
+                        </button>
+                        <button 
+                          onClick={() => incrementWeight(5)} 
+                          className="btn btn-outline btn-sm touch-target"
+                          aria-label="Increase weight by 5kg"
+                        >
+                          +5kg
+                        </button>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
               
-              {/* Rest timer controls */}
-              <div className="flex items-center gap-1 ml-auto">
-                <label className="text-xs text-base-content/60">Rest:</label>
+              {/* Rest timer controls - simplified */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="rest-timer" className="text-sm text-base-content/80">
+                  Rest:
+                </label>
                 <select 
+                  id="rest-timer"
                   value={defaultRestTime} 
                   onChange={(e) => setDefaultRestTime(Number(e.target.value))}
-                  className="select select-bordered select-xs"
+                  className="select select-bordered select-sm touch-target"
+                  aria-label="Default rest time between sets"
                 >
                   <option value={60}>1:00</option>
                   <option value={90}>1:30</option>
@@ -523,12 +609,21 @@ function App() {
                   <option value={180}>3:00</option>
                   <option value={300}>5:00</option>
                 </select>
-                {restTimerSeconds === null && (
+                {restTimerSeconds === null ? (
                   <button 
                     onClick={() => startRestTimer()} 
-                    className="btn btn-outline btn-xs"
+                    className="btn btn-outline btn-sm touch-target"
+                    aria-label="Start rest timer"
                   >
                     Start Timer
+                  </button>
+                ) : (
+                  <button 
+                    onClick={pauseRestTimer}
+                    className="btn btn-outline btn-sm touch-target"
+                    aria-label="Pause rest timer"
+                  >
+                    Pause Timer
                   </button>
                 )}
               </div>
@@ -564,7 +659,6 @@ function App() {
                             <th>Time</th>
                           </>
                         )}
-                        <th>RPE</th>
                         <th>Notes</th>
                         <th className="w-16 text-right">Done</th>
                       </tr>
@@ -572,7 +666,20 @@ function App() {
                     <tbody>
                       {currentSets.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="text-center text-base-content/60 py-8">No sets yet — add your first set above.</td>
+                          <td colSpan={7} className="p-0">
+                            <div className="empty-state">
+                              <p>No sets yet</p>
+                              <div className="empty-state__cta">
+                                <button 
+                                  onClick={addSet}
+                                  className="btn btn-primary btn-sm touch-target"
+                                  aria-label="Add your first set"
+                                >
+                                  Add first set
+                                </button>
+                              </div>
+                            </div>
+                          </td>
                         </tr>
                       ) : (
                         currentSets.map((s, i) => (
@@ -603,20 +710,25 @@ function App() {
                                 <td>{s.durationMs ? formatDuration(s.durationMs) : '—'}</td>
                               </>
                             )}
-                            <td>{s.rpe ?? '—'}</td>
                             <td className="text-xs">{s.notes ? s.notes.substring(0, 20) + (s.notes.length > 20 ? '...' : '') : '—'}</td>
                             <td className="text-right">
                               <button
                                 onClick={() => toggleSetDone(i)}
                                 className={
-                                  'btn btn-circle btn-xs ' +
+                                  'btn btn-circle btn-xs touch-target ' +
                                   (s.done ? 'btn-success' : 'btn-outline')
                                 }
                                 aria-label={s.done ? 'Mark as not done' : 'Mark as done'}
                               >
                                 ✓
                               </button>
-                              <button onClick={() => removeSet(i)} className="btn btn-ghost btn-xs text-error ml-2">remove</button>
+                              <button 
+                                onClick={() => removeSet(i)} 
+                                className="btn btn-ghost btn-xs text-error ml-2 touch-target"
+                                aria-label="Remove this set"
+                              >
+                                remove
+                              </button>
                             </td>
                           </tr>
                         ))
@@ -627,14 +739,20 @@ function App() {
               </div>
             </div>
 
-            <div>
+            <div className="flex justify-between items-center">
               <button
                 onClick={addExercise}
                 disabled={!exerciseName.trim() || currentSets.length === 0}
-                className="btn btn-primary"
+                className="btn btn-outline touch-target"
+                aria-label="Add this exercise to workout"
               >
-                Add Exercise
+                Add Exercise to Workout
               </button>
+              {exerciseName.trim() && currentSets.length > 0 && (
+                <span className="text-sm text-base-content/60">
+                  Ready to add "{exerciseName}" with {currentSets.length} set{currentSets.length !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
 
             {/* Preview of exercises in the current workout */}
@@ -661,8 +779,8 @@ function App() {
                             {ex.modality === ExerciseModality.Time && ` ${s.durationMs ? formatDuration(s.durationMs) : '—'}${s.distanceM ? ` (${s.distanceM}km)` : ''}`}
                             {ex.modality === ExerciseModality.Distance && ` ${s.distanceM ? `${s.distanceM}km` : '—'}${s.durationMs ? ` in ${formatDuration(s.durationMs)}` : ''}`}
                             {(ex.modality === ExerciseModality.Bodyweight || ex.modality === ExerciseModality.Assisted) && ` ${s.reps} reps${s.weight ? ` @ ${s.weight} kg` : ''}`}
-                            {s.rpe ? ` (RPE ${s.rpe})` : ''}
                             {s.isWarmup ? ' [Warm-up]' : ''}
+                            {s.isDropset ? ' [Drop set]' : ''}
                           </li>
                         ))}
                       </ul>
