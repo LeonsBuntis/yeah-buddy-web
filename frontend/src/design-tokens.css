@@ -1,0 +1,85 @@
+/* Design Tokens for consistent spacing, typography, and layout */
+:root {
+  /* Spacing scale (8px base) */
+  --space-1: 0.5rem;  /* 8px */
+  --space-2: 1rem;    /* 16px */
+  --space-3: 1.5rem;  /* 24px */
+  --space-4: 2rem;    /* 32px */
+  --space-5: 2.5rem;  /* 40px */
+  --space-6: 3rem;    /* 48px */
+
+  /* Touch targets */
+  --touch-target: 2.75rem; /* 44px minimum */
+
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+
+  /* Typography scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+
+  /* Grid settings */
+  --form-grid-min: 220px;
+  --form-grid-gap: var(--space-3);
+}
+
+/* Utility classes for the exercise form */
+.exercise-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--form-grid-min), 1fr));
+  gap: var(--form-grid-gap);
+}
+
+.exercise-form-grid--compact {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-2);
+}
+
+.touch-target {
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+}
+
+.advanced-options {
+  border: 1px solid oklch(var(--bc) / 0.2);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  background: oklch(var(--b1) / 0.5);
+}
+
+.advanced-options--hidden {
+  display: none;
+}
+
+.advanced-toggle {
+  background: none;
+  border: none;
+  color: oklch(var(--bc) / 0.6);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+}
+
+.advanced-toggle:hover {
+  background: oklch(var(--bc) / 0.1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  color: oklch(var(--bc) / 0.6);
+}
+
+.empty-state__cta {
+  margin-top: var(--space-3);
+}
