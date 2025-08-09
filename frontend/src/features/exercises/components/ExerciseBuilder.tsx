@@ -4,6 +4,7 @@ import { useExercise } from '../hooks'
 import { ExerciseModality } from '../types'
 import { formatDuration } from '../../../shared/utils'
 import { InlineEdit } from '../../../shared/components'
+import { InlineAddRow } from './InlineAddRow'
 
 interface ExerciseBuilderProps {
   onExerciseAdded: (exercise: ExerciseDto) => void
@@ -27,6 +28,7 @@ export function ExerciseBuilder({
   workoutName
 }: ExerciseBuilderProps) {
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
+  const [showInlineAdvanced, setShowInlineAdvanced] = useState(false)
   
   const {
     exerciseName,
@@ -49,6 +51,7 @@ export function ExerciseBuilder({
     isDropsetInput,
     setIsDropsetInput,
     addSet,
+    addSetInline,
     removeSet,
     copyPreviousSet,
     incrementWeight,
@@ -56,13 +59,29 @@ export function ExerciseBuilder({
     updateSetNumber,
     updateSetReps,
     createExercise,
-    resetExercise
+    resetExercise,
+    getLastSetData
   } = useExercise()
 
   const handleAddSet = () => {
     const success = addSet(defaultRestTime)
     if (success) {
       onSetAdded(isWarmupInput)
+    }
+  }
+
+  const handleInlineAddSet = (setData: {
+    reps?: number
+    weight?: number
+    durationInput?: string
+    distanceInput?: number
+    notes?: string
+    isWarmup?: boolean
+    isDropset?: boolean
+  }) => {
+    const success = addSetInline(setData, defaultRestTime)
+    if (success) {
+      onSetAdded(setData.isWarmup || false)
     }
   }
 
@@ -115,8 +134,8 @@ export function ExerciseBuilder({
         </div>
       </div>
 
-      {/* Set inputs based on modality */}
-      <div className="space-y-4">
+      {/* Set inputs based on modality - HIDDEN: Now handled inline in table */}
+      <div style={{ display: 'none' }} className="space-y-4">
         {/* Weight and Reps - shown for most modalities */}
         {(exerciseModality === ExerciseModality.WeightReps || 
           exerciseModality === ExerciseModality.Bodyweight || 
@@ -282,8 +301,8 @@ export function ExerciseBuilder({
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Action buttons - HIDDEN: Now handled inline in table */}
+      <div style={{ display: 'none' }} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
           <button 
             onClick={handleAddSet} 
@@ -361,6 +380,48 @@ export function ExerciseBuilder({
         </div>
       </div>
 
+      {/* Compact rest timer controls above table */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-base-content/70">
+          Add sets directly in the table below
+        </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="rest-timer" className="text-sm text-base-content/80">
+            Rest:
+          </label>
+          <select 
+            id="rest-timer"
+            value={defaultRestTime} 
+            onChange={(e) => setDefaultRestTime(Number(e.target.value))}
+            className="select select-bordered select-sm touch-target"
+            aria-label="Default rest time between sets"
+          >
+            <option value={60}>1:00</option>
+            <option value={90}>1:30</option>
+            <option value={120}>2:00</option>
+            <option value={180}>3:00</option>
+            <option value={300}>5:00</option>
+          </select>
+          {restTimerSeconds === null ? (
+            <button 
+              onClick={() => startRestTimer(defaultRestTime)} 
+              className="btn btn-outline btn-sm touch-target"
+              aria-label="Start rest timer"
+            >
+              Start Timer
+            </button>
+          ) : (
+            <button 
+              onClick={pauseRestTimer}
+              className="btn btn-outline btn-sm touch-target"
+              aria-label="Pause rest timer"
+            >
+              Pause Timer
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Sets table with workout caption */}
       <div className="card bg-base-100 border">
         <div className="card-body p-0">
@@ -392,43 +453,70 @@ export function ExerciseBuilder({
                     </>
                   )}
                   <th>Notes</th>
-                  <th className="w-16 text-right">Done</th>
+                  <th className="w-16 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <span>Done</span>
+                      {currentSets.length === 0 && (
+                        <button
+                          onClick={() => setShowInlineAdvanced(!showInlineAdvanced)}
+                          className="btn btn-ghost btn-xs"
+                          title="Advanced options"
+                        >
+                          ⚙️
+                        </button>
+                      )}
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {currentSets.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="p-0">
-                      <div className="empty-state">
-                        <p>No sets yet</p>
-                        <div className="empty-state__cta">
-                          <button 
-                            onClick={handleAddSet}
-                            className="btn btn-primary btn-sm touch-target"
-                            aria-label="Add your first set"
-                          >
-                            Add first set
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
+                  <InlineAddRow
+                    exerciseModality={exerciseModality}
+                    onAddSet={handleInlineAddSet}
+                    showAdvancedOptions={showInlineAdvanced}
+                    onToggleAdvancedOptions={() => setShowInlineAdvanced(!showInlineAdvanced)}
+                  />
                 ) : (
-                  currentSets.map((s, i) => (
-                    <SetRow
-                      key={i}
-                      set={s}
-                      index={i}
+                  <>
+                    {currentSets.map((s, i) => (
+                      <SetRow
+                        key={i}
+                        set={s}
+                        index={i}
+                        exerciseModality={exerciseModality}
+                        onToggleDone={() => toggleSetDone(i)}
+                        onRemove={() => removeSet(i)}
+                        onUpdateSetNumber={(newSetNumber) => updateSetNumber(i, newSetNumber)}
+                        onUpdateReps={(newReps) => updateSetReps(i, newReps)}
+                        totalSets={currentSets.length}
+                      />
+                    ))}
+                    {/* Persistent inline add row at bottom when sets exist */}
+                    <InlineAddRow
                       exerciseModality={exerciseModality}
-                      onToggleDone={() => toggleSetDone(i)}
-                      onRemove={() => removeSet(i)}
-                      onUpdateSetNumber={(newSetNumber) => updateSetNumber(i, newSetNumber)}
-                      onUpdateReps={(newReps) => updateSetReps(i, newReps)}
-                      totalSets={currentSets.length}
+                      onAddSet={handleInlineAddSet}
+                      prefillData={getLastSetData()}
+                      showAdvancedOptions={showInlineAdvanced}
+                      onToggleAdvancedOptions={() => setShowInlineAdvanced(!showInlineAdvanced)}
                     />
-                  ))
+                  </>
                 )}
               </tbody>
+              {currentSets.length > 0 && (
+                <tfoot>
+                  <tr>
+                    <td colSpan={7} className="text-right p-2">
+                      <button
+                        onClick={() => setShowInlineAdvanced(!showInlineAdvanced)}
+                        className="btn btn-ghost btn-xs"
+                      >
+                        {showInlineAdvanced ? 'Hide' : 'Show'} Advanced Options
+                      </button>
+                    </td>
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
         </div>

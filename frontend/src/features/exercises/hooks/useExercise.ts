@@ -17,6 +17,42 @@ export function useExercise() {
   const [isWarmupInput, setIsWarmupInput] = useState(false)
   const [isDropsetInput, setIsDropsetInput] = useState(false)
 
+  const addSetInline = (setData: {
+    reps?: number
+    weight?: number
+    durationInput?: string
+    distanceInput?: number
+    notes?: string
+    isWarmup?: boolean
+    isDropset?: boolean
+  }, defaultRestTime: number) => {
+    const reps = setData.reps || 0
+    const weight = setData.weight || undefined
+    const distance = setData.distanceInput || undefined
+    const durationMs = parseDuration(setData.durationInput || '')
+    
+    // Validation based on modality
+    if (exerciseModality === ExerciseModality.WeightReps && (!reps || reps <= 0)) return false
+    if (exerciseModality === ExerciseModality.Time && !durationMs) return false
+    if (exerciseModality === ExerciseModality.Distance && (!distance || distance <= 0)) return false
+    if ((exerciseModality === ExerciseModality.Bodyweight || exerciseModality === ExerciseModality.Assisted) && (!reps || reps <= 0)) return false
+    
+    const set: SetDto = {
+      reps: reps || 0,
+      weight: weight || undefined,
+      durationMs,
+      distanceM: distance || undefined,
+      isWarmup: setData.isWarmup || false,
+      isDropset: setData.isDropset || false,
+      notes: setData.notes?.trim() || undefined,
+      restSeconds: defaultRestTime
+    }
+    
+    setCurrentSets(prev => [...prev, set])
+    
+    return true
+  }
+
   const addSet = (defaultRestTime: number) => {
     const reps = typeof repsInput === 'string' ? parseInt(repsInput || '0', 10) : repsInput
     const weight = typeof weightInput === 'string' ? parseFloat(weightInput || '0') : weightInput
@@ -69,6 +105,18 @@ export function useExercise() {
     setIsWarmupInput(lastSet.isWarmup || false)
     setIsDropsetInput(lastSet.isDropset || false)
     return true
+  }
+
+  const getLastSetData = () => {
+    if (currentSets.length === 0) return undefined
+    const lastSet = currentSets[currentSets.length - 1]
+    return {
+      reps: lastSet.reps,
+      weight: lastSet.weight,
+      durationInput: lastSet.durationMs ? formatDuration(lastSet.durationMs) : '',
+      distanceInput: lastSet.distanceM,
+      notes: '' // Don't prefill notes
+    }
   }
 
   const incrementWeight = (amount: number) => {
@@ -152,6 +200,7 @@ export function useExercise() {
 
     // Actions
     addSet,
+    addSetInline,
     removeSet,
     copyPreviousSet,
     incrementWeight,
@@ -159,7 +208,8 @@ export function useExercise() {
     updateSetNumber,
     updateSetReps,
     createExercise,
-    resetExercise
+    resetExercise,
+    getLastSetData
   }
 }
 
