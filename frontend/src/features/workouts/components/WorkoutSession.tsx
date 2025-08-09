@@ -17,9 +17,7 @@ interface WorkoutSessionProps {
 export function WorkoutSession({ 
   name, 
   exercises, 
-  onAddExercise,
-  onFinishWorkout,
-  onCancelWorkout 
+  onAddExercise
 }: WorkoutSessionProps) {
   const [defaultRestTime, setDefaultRestTime] = useState(90)
   const { addToast } = useToasts()
